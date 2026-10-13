@@ -1,0 +1,30 @@
+# Multilingual warranty embedding demo (Qwen3 vs LaBSE).
+# Set catalog, schema, and warehouse_id at validate/deploy/run time via --var
+# or per-target overrides. See README.md and SETUP.md.
+bundle:
+  name: multilingual-warranty-embedding-demo
+
+include:
+  - resources/*.yml
+
+variables:
+  # Unity Catalog catalog where demo tables and monitoring tables are written.
+  catalog:
+    description: Unity Catalog catalog where demo tables are created.
+  # Isolated schema for this deployer's demo run (default includes user short name).
+  schema:
+    description: Isolated schema for this user's demo run.
+    default: multilingual_warranty_demo_${workspace.current_user.short_name}
+  # SQL warehouse that powers the AI/BI monitoring dashboard.
+  warehouse_id:
+    description: SQL warehouse ID used by the AI/BI dashboard.
+
+workspace:
+  root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+targets:
+  dev:
+    default: true
+    mode: development
+  prod:
+    mode: production

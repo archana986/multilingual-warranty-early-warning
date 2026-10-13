@@ -1,0 +1,389 @@
+{
+  "datasets": [
+    {
+      "name": "eval_hist",
+      "displayName": "eval_history",
+      "queryLines": [
+        "SELECT batch_date, cluster_purity, ari, xling_retrieval, passed FROM eval_history ORDER BY batch_date"
+      ]
+    },
+    {
+      "name": "drift",
+      "displayName": "drift_monitor",
+      "queryLines": [
+        "SELECT batch_date, n_clusters, n_new_claims, n_emerging, mean_best_similarity FROM drift_monitor ORDER BY batch_date"
+      ]
+    },
+    {
+      "name": "latency",
+      "displayName": "embed_run_log",
+      "queryLines": [
+        "SELECT batch_date, n_rows, seconds, round(seconds/greatest(n_rows,1)*1000,1) AS ms_per_row FROM embed_run_log ORDER BY batch_date"
+      ]
+    },
+    {
+      "name": "cost",
+      "displayName": "cost_by_day",
+      "queryLines": [
+        "SELECT usage_date, dbus FROM cost_by_day ORDER BY usage_date"
+      ]
+    },
+    {
+      "name": "alerts",
+      "displayName": "emerging_issue_alerts",
+      "queryLines": [
+        "SELECT batch_date, claim_id, language, best_similarity FROM emerging_issue_alerts ORDER BY batch_date DESC, best_similarity ASC"
+      ]
+    },
+    {
+      "name": "alert_kpi",
+      "displayName": "emerging_kpi",
+      "queryLines": [
+        "SELECT sum(n_emerging) AS total_emerging FROM drift_monitor"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "monitoring",
+      "displayName": "Warranty AI - Monitoring & AIOps",
+      "layout": [
+        {
+          "widget": {
+            "name": "c_emerging",
+            "queries": [
+              {
+                "name": "main",
+                "query": {
+                  "datasetName": "alert_kpi",
+                  "fields": [
+                    {
+                      "name": "total_emerging",
+                      "expression": "`total_emerging`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_emerging",
+                  "displayName": "Emerging-issue candidates (all batches)"
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 4
+          }
+        },
+        {
+          "widget": {
+            "name": "l_eval",
+            "queries": [
+              {
+                "name": "main",
+                "query": {
+                  "datasetName": "eval_hist",
+                  "fields": [
+                    {
+                      "name": "batch_date",
+                      "expression": "`batch_date`"
+                    },
+                    {
+                      "name": "cluster_purity",
+                      "expression": "`cluster_purity`"
+                    },
+                    {
+                      "name": "xling_retrieval",
+                      "expression": "`xling_retrieval`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "batch_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "batch_date"
+                },
+                "y": {
+                  "fields": [
+                    {
+                      "fieldName": "cluster_purity",
+                      "displayName": "cluster_purity"
+                    },
+                    {
+                      "fieldName": "xling_retrieval",
+                      "displayName": "xling_retrieval"
+                    }
+                  ],
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "title": "Quality over time (purity & cross-lingual retrieval)",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "l_drift",
+            "queries": [
+              {
+                "name": "main",
+                "query": {
+                  "datasetName": "drift",
+                  "fields": [
+                    {
+                      "name": "batch_date",
+                      "expression": "`batch_date`"
+                    },
+                    {
+                      "name": "n_emerging",
+                      "expression": "`n_emerging`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "batch_date",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "batch_date"
+                },
+                "y": {
+                  "fieldName": "n_emerging",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "n_emerging"
+                }
+              },
+              "frame": {
+                "title": "Emerging-issue count per batch (drift signal)",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "b_lat",
+            "queries": [
+              {
+                "name": "main",
+                "query": {
+                  "datasetName": "latency",
+                  "fields": [
+                    {
+                      "name": "batch_date",
+                      "expression": "`batch_date`"
+                    },
+                    {
+                      "name": "ms_per_row",
+                      "expression": "`ms_per_row`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "batch_date",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "batch_date"
+                },
+                "y": {
+                  "fieldName": "ms_per_row",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "ms_per_row"
+                }
+              },
+              "frame": {
+                "title": "Embed latency (ms/row) per batch",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "b_cost",
+            "queries": [
+              {
+                "name": "main",
+                "query": {
+                  "datasetName": "cost",
+                  "fields": [
+                    {
+                      "name": "usage_date",
+                      "expression": "`usage_date`"
+                    },
+                    {
+                      "name": "dbus",
+                      "expression": "`dbus`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "usage_date",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "usage_date"
+                },
+                "y": {
+                  "fieldName": "dbus",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "dbus"
+                }
+              },
+              "frame": {
+                "title": "Embedding DBUs per day (attributed by tag)",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 11,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "t_alerts",
+            "queries": [
+              {
+                "name": "main",
+                "query": {
+                  "datasetName": "alerts",
+                  "fields": [
+                    {
+                      "name": "batch_date",
+                      "expression": "`batch_date`"
+                    },
+                    {
+                      "name": "claim_id",
+                      "expression": "`claim_id`"
+                    },
+                    {
+                      "name": "language",
+                      "expression": "`language`"
+                    },
+                    {
+                      "name": "best_similarity",
+                      "expression": "`best_similarity`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "batch_date",
+                    "displayName": "batch_date"
+                  },
+                  {
+                    "fieldName": "claim_id",
+                    "displayName": "claim_id"
+                  },
+                  {
+                    "fieldName": "language",
+                    "displayName": "language"
+                  },
+                  {
+                    "fieldName": "best_similarity",
+                    "displayName": "best_similarity"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Emerging-issue alerts (lowest similarity first)",
+                "showTitle": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 17,
+            "width": 6,
+            "height": 7
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGN_CENTER"
+    }
+  }
+}

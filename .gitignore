@@ -1,0 +1,10 @@
+.databricks/
+.idea/
+.vscode/
+__pycache__/
+*.py[cod]
+.DS_Store
+.pytest_cache/
+
+# internal review doc (not part of deliverable)
+REPO_READ.html

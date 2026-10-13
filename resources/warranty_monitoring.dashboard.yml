@@ -1,0 +1,8 @@
+resources:
+  dashboards:
+    warranty_monitoring:
+      display_name: ${bundle.target} Multilingual Warranty Monitoring
+      file_path: ../src/dashboards/warranty_monitoring.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      dataset_catalog: ${var.catalog}
+      dataset_schema: ${var.schema}

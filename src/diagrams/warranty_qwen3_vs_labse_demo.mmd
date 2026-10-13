@@ -1,0 +1,43 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "DM Sans, Helvetica, Arial, sans-serif"
+    fontSize: "14px"
+    lineColor: "#393737"
+  flowchart:
+    nodeSpacing: 45
+    rankSpacing: 75
+    curve: basis
+---
+flowchart LR
+  S["<b>1 · Synthetic warranty claims</b><br/><span style='font-size:11px'>144 claims · 12 defect types × 4 languages × 3 phrasings<br/><b>EN · KO · ES · DE</b> · known defect label<br/>(seeded, reproducible, no real customer data)</span>"]:::src
+  D["<b>2 · Delta table (Unity Catalog)</b><br/><span style='font-size:11px'>configured catalog + isolated schema<br/>governed · lineage · access control</span>"]:::feature
+
+  Q["<b>3a · Qwen3-Embedding</b><br/><span style='font-size:11px'>databricks-qwen3-embedding-0-6b<br/>batch via <b>ai_query</b> (managed, GA path)<br/>1024-dim · <b>Public Preview</b></span>"]:::accent
+  L["<b>3b · LaBSE</b><br/><span style='font-size:11px'>sentence-transformers/LaBSE (OSS, Apache-2.0)<br/>self-hosted · no HF token needed<br/>768-dim</span>"]:::model
+
+  P["<b>4 · Cross-lingual proof</b><br/><span style='font-size:11px'>same defect across languages clusters together:<br/>separation margin · KMeans purity + ARI<br/>top-1 cross-lingual retrieval accuracy</span>"]:::flag
+  I["<b>5 · Early-warning insight</b><br/><span style='font-size:11px'>emerging-issue volume per defect cluster;<br/>feeds AI/BI dashboards +<br/>Genie / Agent Bricks RCA</span>"]:::feature
+
+  S -->|"generate"| D
+  D -->|"batch embed (ai_query)"| Q
+  D -->|"embed same texts"| L
+  Q -->|"1024-dim vectors"| P
+  L -->|"768-dim vectors"| P
+  P -->|"clusters + metrics"| I
+
+  RULE["<b>Production rule</b>: one model per index<br/><span style='font-size:11px'>index-time and query-time embeddings must share<br/>the SAME model / vector space / dimension.<br/>Do not blend Qwen3 and LaBSE in one index.</span>"]:::note
+  P -.- RULE
+
+  UC["<b>Unity Catalog</b>: governance, lineage &amp; access across every stage"]:::gov
+  D -.- UC
+  Q -.- UC
+
+  classDef src fill:#FFFFFF,stroke:#8b97a5,color:#1b3037
+  classDef feature fill:#42ba91,stroke:#2f8f6e,color:#FFFFFF
+  classDef flag fill:#1b3037,stroke:#1b3037,color:#FFFFFF
+  classDef accent fill:#2272b4,stroke:#1a5a90,color:#FFFFFF
+  classDef gov fill:#eef1f3,stroke:#1b3037,color:#1b3037
+  classDef note fill:#fdf6e3,stroke:#b8860b,color:#1b3037
+  classDef model fill:#eef1f3,stroke:#2272b4,color:#1b3037
