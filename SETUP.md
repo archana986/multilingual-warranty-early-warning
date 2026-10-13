@@ -62,14 +62,24 @@ databricks bundle validate --strict -p <profile> \
 databricks bundle deploy -p <profile> \
   --var="catalog=<catalog>,warehouse_id=<warehouse-id>"
 
-databricks bundle run warranty_embedding_demo -p <profile> \
+databricks bundle run warranty_model_evaluation -p <profile> \
   --var="catalog=<catalog>,warehouse_id=<warehouse-id>"
 ```
 
-The job runs two tasks in order:
+The evaluation job:
 
-1. Generate synthetic data and compare Qwen3 with LaBSE.
-2. Re-embed simulated weekly batches, evaluate drift and quality, log MLflow evidence, and populate dashboard tables.
+1. Generates the labeled synthetic corpus.
+2. Runs Qwen3 and LaBSE on the same claims.
+3. Writes the decision scorecard to `<catalog>.<schema>.comparison_metrics`.
+
+After selecting a model, optionally run the separate monitoring extension:
+
+```bash
+databricks bundle run warranty_model_monitoring -p <profile> \
+  --var="catalog=<catalog>,warehouse_id=<warehouse-id>"
+```
+
+The optional job re-embeds simulated weekly batches, evaluates drift and quality, logs MLflow evidence, and populates dashboard tables. No calendar schedule is configured.
 
 The dashboard is deployed with `dataset_catalog` and `dataset_schema`, so its SQL uses unqualified table names and binds to your catalog and schema at deploy time.
 
@@ -77,13 +87,11 @@ The dashboard is deployed with `dataset_catalog` and `dataset_schema`, so its SQ
 
 If CLI deployment is not desired:
 
-1. Import both `.ipynb` files under `src/notebooks/`.
-2. Attach the base notebook to serverless compute.
-3. Set `catalog` and `schema` widgets.
-4. Run All in `multilingual_warranty_qwen3_vs_labse.ipynb`.
-5. Attach `05_monitoring_and_aiops.ipynb` to serverless compute.
-6. Use the same widget values and Run All.
-7. Import `src/dashboards/warranty_monitoring.lvdash.json`, then select the same catalog, schema, and a SQL warehouse in the dashboard settings.
+1. Import `multilingual_warranty_qwen3_vs_labse.ipynb`.
+2. Attach serverless compute, set `catalog` and `schema`, and Run All.
+3. Query `comparison_metrics` and decide which model meets the defined acceptance criteria.
+4. Optional: import `05_monitoring_and_aiops.ipynb`, use the same widget values, and Run All.
+5. Optional: import the dashboard and bind it to the same catalog, schema, and warehouse.
 
 The notebooks use Python variables and widgets rather than custom `spark.conf.set` keys, so they work with Spark Connect serverless and classic compute.
 
@@ -102,16 +110,17 @@ Steps:
 
 1. Create or grant a schema for the demo outputs.
 2. Replace the generator section in the base notebook with a read from your table (same column names), or write a staging view that aliases your columns to this contract.
-3. Run base, then Day-2, with the same catalog and schema.
+3. Run the evaluation and review `comparison_metrics`.
 4. Keep one embedding model per index (do not blend Qwen3 and LaBSE vectors).
-5. Recalibrate `MIN_CLUSTER_PURITY`, `MIN_XLING_RETRIEVAL`, and `OOD_SIM_THRESHOLD` on labeled historical batches before production use.
+5. If adopting the optional monitoring extension, recalibrate `MIN_CLUSTER_PURITY`, `MIN_XLING_RETRIEVAL`, and `OOD_SIM_THRESHOLD` on labeled historical batches before production use.
 
 ## Update (pull, change config, redeploy)
 
 | Situation | Action |
 |---|---|
-| New commits from GitHub | `git pull` → `bundle validate` → `bundle deploy` → `bundle run` |
-| You edited notebooks or `resources/*.yml` | `bundle deploy` then `bundle run` |
+| New commits from GitHub | `git pull` → validate → deploy → run `warranty_model_evaluation` |
+| You edited evaluation code or `resources/*.yml` | Deploy, then run `warranty_model_evaluation` |
+| You edited monitoring code | Deploy, then run `warranty_model_monitoring` |
 | Temporary catalog/schema for one run | CLI `--var="catalog=...,schema=...,warehouse_id=..."` |
 | Interactive one-off | notebook widgets (does not edit the bundle) |
 | Team defaults | set `variables` / per-target overrides in `databricks.yml` |
@@ -144,9 +153,10 @@ For release validation, also run:
 
 1. `databricks bundle validate --strict`.
 2. Deploy to a fresh schema.
-3. Run the workflow twice to verify idempotency.
-4. Open the dashboard and execute each dataset query.
-5. Repeat once with no billing-system permission to verify graceful degradation.
+3. Run the evaluation twice to verify idempotency and query `comparison_metrics`.
+4. Run the optional monitoring extension twice to verify idempotency.
+5. Open the dashboard and execute each monitoring dataset query.
+6. Repeat monitoring once with no billing-system permission to verify graceful degradation.
 
 ## Cleanup
 
@@ -167,6 +177,8 @@ Review the catalog and schema carefully before running destructive SQL.
 
 - Qwen3 is Public Preview and can be unavailable or change independently of this repository.
 - Synthetic metrics do not establish production accuracy, drift thresholds, cost, latency, or business impact.
+- The repository is an evaluation accelerator. Production uses one selected model, not both evaluation candidates.
+- Day-2 monitoring is a separate optional extension. No calendar schedule is configured.
 - The LaBSE comparison collects 144 rows to the Python process. This is intentional for a small evaluation corpus and is not a production-scale embedding pattern.
 - The demonstration overwrites named tables in its selected schema. Use an isolated schema per user or environment.
 - Billing usage can lag and depends on permissions and tag propagation.

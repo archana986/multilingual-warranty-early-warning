@@ -85,10 +85,38 @@ class DataContractTests(unittest.TestCase):
 
 
 class RepositoryContractTests(unittest.TestCase):
+    def test_evaluation_and_monitoring_are_separate_jobs(self):
+        evaluation = (ROOT / "resources/warranty_demo.job.yml").read_text(
+            encoding="utf-8"
+        )
+        monitoring = (ROOT / "resources/warranty_monitoring.job.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("warranty_model_evaluation:", evaluation)
+        self.assertNotIn("warranty_model_monitoring:", evaluation)
+        self.assertIn("warranty_model_monitoring:", monitoring)
+        self.assertIn("multilingual_warranty_qwen3_vs_labse.ipynb", evaluation)
+        self.assertNotIn("05_monitoring_and_aiops.ipynb", evaluation)
+        self.assertIn("05_monitoring_and_aiops.ipynb", monitoring)
+
+    def test_evaluation_persists_a_queryable_scorecard(self):
+        notebook = (
+            ROOT / "src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb"
+        ).read_text(encoding="utf-8")
+        self.assertIn("comparison_metrics", notebook)
+        self.assertIn("crosslingual_retrieval_accuracy", notebook)
+
+    def test_readme_frames_monitoring_as_optional_extension(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Model Evaluation Accelerator", readme)
+        self.assertIn("Optional operational extension", readme)
+        self.assertNotIn("Two serverless notebook tasks", readme)
+
     def test_bundle_references_existing_assets(self):
         required = [
             ROOT / "databricks.yml",
             ROOT / "resources/warranty_demo.job.yml",
+            ROOT / "resources/warranty_monitoring.job.yml",
             ROOT / "resources/warranty_monitoring.dashboard.yml",
             ROOT / "src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb",
             ROOT / "src/notebooks/05_monitoring_and_aiops.ipynb",

@@ -1,0 +1,15 @@
+resources:
+  jobs:
+    warranty_model_monitoring:
+      name: ${bundle.target}-multilingual-warranty-model-monitoring
+      description: Optional Day-2 extension that evaluates new synthetic batches against the selected model's prior history.
+      tags:
+        workload: multilingual_model_monitoring
+        data_classification: synthetic
+      tasks:
+        - task_key: monitor_selected_model
+          notebook_task:
+            notebook_path: ../src/notebooks/05_monitoring_and_aiops.ipynb
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}

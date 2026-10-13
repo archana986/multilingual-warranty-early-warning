@@ -1,23 +1,15 @@
 resources:
   jobs:
-    warranty_embedding_demo:
-      name: ${bundle.target}-multilingual-warranty-embedding-demo
-      description: Runs the base comparison and its Day-2 monitoring workflow.
+    warranty_model_evaluation:
+      name: ${bundle.target}-multilingual-warranty-model-evaluation
+      description: Compares a Databricks-managed embedding model with a self-hosted model on the same labeled multilingual claims.
       tags:
-        pipeline: multilingual_warranty_embed
+        workload: multilingual_model_evaluation
         data_classification: synthetic
       tasks:
         - task_key: compare_embeddings
           notebook_task:
             notebook_path: ../src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb
-            base_parameters:
-              catalog: ${var.catalog}
-              schema: ${var.schema}
-        - task_key: monitor_embeddings
-          depends_on:
-            - task_key: compare_embeddings
-          notebook_task:
-            notebook_path: ../src/notebooks/05_monitoring_and_aiops.ipynb
             base_parameters:
               catalog: ${var.catalog}
               schema: ${var.schema}

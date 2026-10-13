@@ -1,21 +1,25 @@
-# Multilingual Warranty Early-Warning: Qwen3 vs LaBSE
+# Multilingual Embedding Model Evaluation Accelerator
 
-Fork this repository, point it at your Databricks workspace, and run the same synthetic comparison on a clean schema. No real warranty data is included.
+Use this repository to make an evidence-based choice between a Databricks-managed embedding model and a self-hosted open-source model. It runs both candidates on the same labeled multilingual claims and writes a queryable comparison scorecard to Unity Catalog.
 
-This README is the GitHub source of truth. A `databricks bundle deploy` uploads notebooks, the job, and the dashboard. It does **not** publish this README or the architecture image into the workspace. Read here first, then deploy.
+The included corpus is synthetic. It demonstrates the evaluation method without customer data and does not reproduce a live customer system. A separate optional job demonstrates Day-2 monitoring after a model has been selected.
 
 ## What this proves
 
-Warranty-style claims in English, Korean, Spanish, and German should cluster by the **same physical defect**, not by language. The demo generates 144 synthetic claims (12 defects × 4 languages × 3 phrasings), embeds them with two models on the **same text**, and reports clustering and retrieval metrics.
+The engineering question is not whether two models can run together in production. It is whether a managed model meets the adopter's accuracy requirements well enough to replace a model they must host and operate.
+
+The evaluation generates 144 synthetic warranty-style claims in English, Korean, Spanish, and German. Both candidates receive the same text and labels:
 
 - **Qwen3** (`databricks-qwen3-embedding-0-6b`): Databricks-managed, 1024-dim, Public Preview, called with `ai_query`.
 - **LaBSE** (`sentence-transformers/LaBSE`, pinned revision): open-source, 768-dim, Apache-2.0, loaded in the notebook.
 
-Both can recover the defect structure on this corpus. The operational choice is managed vs self-hosted, not “only one model works.” **Do not mix the two vector spaces in one index.**
+The scorecard compares semantic separation, cluster purity, Adjusted Rand Index, and top-1 cross-lingual retrieval. If both candidates meet the required quality bar, the remaining choice is operational: use the managed model to avoid hosting infrastructure, or retain the self-hosted model when direct control of an open model is required.
+
+Production uses one selected model. **Do not mix the two vector spaces in one index.**
 
 ## Architecture
 
-![Pipeline: synthetic claims to Unity Catalog, dual embeddings, clustering proof, then early-warning insight](src/diagrams/warranty_qwen3_vs_labse_demo.png)
+![Evaluation accelerator: the same labeled multilingual claims go through a Databricks-managed model and a self-hosted model, then one scorecard supports the model decision](src/diagrams/warranty_qwen3_vs_labse_demo.png)
 
 Editable source: [`src/diagrams/warranty_qwen3_vs_labse_demo.mmd`](src/diagrams/warranty_qwen3_vs_labse_demo.mmd).
 
@@ -25,12 +29,12 @@ Editable source: [`src/diagrams/warranty_qwen3_vs_labse_demo.mmd`](src/diagrams/
 | 2. Delta / Unity Catalog | Schema + tables in **your** catalog | Stores claims and embeddings with governance. Catalog and schema are widgets / bundle variables. |
 | 3a. Qwen3 | Foundation Model API via `ai_query` | Batch-embeds every claim. Needs workspace entitlement to that preview endpoint. |
 | 3b. LaBSE | Pinned Sentence-Transformers model | Embeds the same texts locally in the notebook. Needs outbound access to Hugging Face (or a mirrored copy). |
-| 4. Cross-lingual proof | Cosine margin, KMeans purity / ARI, top-1 retrieval | Scores whether the same defect stays close across languages. |
-| 5. Early-warning / Day-2 | Second notebook + five monitoring tables | Simulates weekly batches, scores **new** batches against **prior** centroids, quality-gates metrics, optional billing, MLflow config log. |
-| Dashboard | Lakeview JSON + bundle `dataset_catalog` / `dataset_schema` | Charts drift, quality, latency, optional cost, and alerts. Needs a SQL warehouse ID at deploy time. |
-| Job | Two serverless notebook tasks | Runs base comparison, then monitoring, in order. |
+| 4. Decision scorecard | Cosine margin, KMeans purity / ARI, top-1 retrieval | Writes one `comparison_metrics` table that shows whether each candidate meets the required quality bar. |
+| 5. Model decision | Accuracy plus operational trade-offs | Selects one model for production. The evaluation is not the normal serving path. |
 
-Unity Catalog governs tables and lineage. The Day-2 notebook does **not** register a fake UC “model” for the managed endpoint. It logs evaluation parameters in MLflow.
+### Optional operational extension
+
+The separate `warranty_model_monitoring` job simulates later weekly batches, scores them against prior centroids, applies quality thresholds, logs MLflow evidence, and populates dashboard tables. It is guidance for operating the selected model, not evidence that a customer runs this exact job. The repository does not configure a calendar schedule.
 
 ## Use in your workspace
 
@@ -55,13 +59,20 @@ databricks bundle validate --strict -p <profile> \
 databricks bundle deploy -p <profile> \
   --var="catalog=<your_catalog>,warehouse_id=<warehouse-id>"
 
-databricks bundle run warranty_embedding_demo -p <profile> \
+databricks bundle run warranty_model_evaluation -p <profile> \
   --var="catalog=<your_catalog>,warehouse_id=<warehouse-id>"
 ```
 
 Optional: `--var="...,schema=<dedicated_schema>"`. Use an isolated schema; reruns overwrite tables there.
 
-Prerequisites, interactive Run All, air-gap, and cleanup: [SETUP.md](SETUP.md).
+Run the optional monitoring extension only after the evaluation has created its base tables:
+
+```bash
+databricks bundle run warranty_model_monitoring -p <profile> \
+  --var="catalog=<your_catalog>,warehouse_id=<warehouse-id>"
+```
+
+Prerequisites, interactive execution, air-gap guidance, and cleanup: [SETUP.md](SETUP.md).
 
 Local checks (no Databricks call):
 
@@ -71,10 +82,11 @@ python -m unittest discover -s tests -v
 
 ### Interactive path (no job)
 
-1. Import `src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb` and `src/notebooks/05_monitoring_and_aiops.ipynb`.
-2. Attach serverless. Set the same `catalog` and `schema` widgets on both.
-3. Run All on the base notebook, then Run All on the Day-2 notebook.
-4. Import `src/dashboards/warranty_monitoring.lvdash.json` and bind it to the same catalog, schema, and warehouse.
+1. Import `src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb`.
+2. Attach serverless, set the `catalog` and `schema` widgets, and Run All.
+3. Query `<catalog>.<schema>.comparison_metrics` to review the decision scorecard.
+4. Optional: import and run `05_monitoring_and_aiops.ipynb` with the same widgets.
+5. Optional: import the dashboard and bind it to the monitoring schema and warehouse.
 
 ## Adopt (bring your own claims)
 
@@ -83,15 +95,16 @@ The synthetic generator is only for the out-of-the-box demo. To use your own dat
 1. Keep the same column contract: `claim_id`, `defect_id` (or ground-truth label), `language`, `claim_text`.
 2. Point the base notebook (or a thin wrapper) at your table instead of generating `rows`.
 3. Use one embedding model per vector index. Do not mix Qwen3 (1024-dim) and LaBSE (768-dim) in the same index.
-4. Keep Day-2 on the same catalog and schema as the base run so monitoring tables align.
-5. Retune quality gates and the out-of-distribution threshold on labeled history before treating alerts as production.
+4. Define acceptance thresholds before reading the results.
+5. If adopting the optional monitoring extension, keep it on the same catalog and schema and recalibrate all thresholds on representative history.
 
 ## Update (after you change code or pull)
 
 | Change | What to do |
 |---|---|
-| Pull latest from GitHub | `git pull`, then `bundle deploy` and `bundle run` again with the same vars |
-| Notebook or resource YAML edits | `databricks bundle deploy` to sync workspace files, then rerun the job |
+| Pull latest from GitHub | `git pull`, then deploy and rerun `warranty_model_evaluation` with the same vars |
+| Evaluation notebook or resource edits | Deploy, then rerun `warranty_model_evaluation` |
+| Monitoring notebook edits | Deploy, then rerun `warranty_model_monitoring` |
 | One-off catalog/schema for a run | pass `--var` on the CLI (overrides defaults for that command) |
 | Interactive widgets | set `catalog` / `schema` in the notebook UI; does not change the bundle YAML |
 | Defaults for a target | edit `variables` / `targets` in `databricks.yml`, then validate and deploy |
@@ -103,10 +116,11 @@ The synthetic generator is only for the out-of-the-box demo. To use your own dat
 | Path | Role |
 |---|---|
 | `databricks.yml` | Bundle name, `catalog` / `schema` / `warehouse_id` variables, deploy targets. |
-| `resources/warranty_demo.job.yml` | Two-task job: compare, then monitor. Passes catalog and schema into both notebooks. |
+| `resources/warranty_demo.job.yml` | Evaluation job that runs the head-to-head model comparison. |
+| `resources/warranty_monitoring.job.yml` | Separate optional Day-2 monitoring job. |
 | `resources/warranty_monitoring.dashboard.yml` | Deploys the Lakeview dashboard with parameterized catalog and schema. |
-| `src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb` | Generate data, Qwen3 + LaBSE, metrics, cluster volume view. |
-| `src/notebooks/05_monitoring_and_aiops.ipynb` | Batches, latency, prior-batch drift, quality gate, optional cost, MLflow log, dashboard tables. |
+| `src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb` | Generates identical labeled inputs, evaluates Qwen3 and LaBSE, and writes `comparison_metrics`. |
+| `src/notebooks/05_monitoring_and_aiops.ipynb` | Optional extension: synthetic batches, latency, prior-batch drift, quality gate, cost, MLflow, dashboard tables. |
 | `src/dashboards/warranty_monitoring.lvdash.json` | Dashboard datasets (unqualified table names; catalog/schema applied at deploy). |
 | `src/diagrams/` | Architecture PNG (this README) and Mermaid source. |
 | `tests/test_portability.py` | Static fork-and-run contract checks. |
@@ -114,12 +128,14 @@ The synthetic generator is only for the out-of-the-box demo. To use your own dat
 
 ## Results (small synthetic corpus)
 
-Latest run: 2026-10-04 on Azure Databricks serverless. Re-run in your workspace; managed endpoints can change, so numbers move between runs.
+Release validation ran on 2026-10-13 on Azure Databricks serverless. The `comparison_metrics` table contained:
 
-- Cluster purity: Qwen3 0.875, LaBSE 0.778 (earlier run: LaBSE 0.771)
-- ARI: Qwen3 0.779, LaBSE 0.674 (earlier runs: Qwen3 0.767 and 0.764, LaBSE 0.641)
-- Top-1 cross-lingual retrieval: Qwen3 0.993, LaBSE 1.000 (same in both runs)
-- Day-2 quality gate: the latest simulated week (2026-08-10) scored purity 0.785 against a 0.80 minimum, so the gate failed and blocked promotion. This is the intended behavior of the gate.
+- **Databricks-managed Qwen3:** cluster purity 0.875, ARI 0.779, top-1 cross-lingual retrieval 0.993, semantic separation margin 0.215.
+- **Self-hosted LaBSE:** cluster purity 0.778, ARI 0.674, top-1 cross-lingual retrieval 1.000, semantic separation margin 0.297.
+
+Qwen3 led the clustering measures. LaBSE led semantic separation and was slightly higher on retrieval. Both recovered useful cross-lingual defect structure on this small synthetic corpus. These numbers demonstrate the decision method; they are not customer acceptance results. Managed endpoint behavior can change, so adopters should rerun the evaluation and define thresholds for their own labeled data.
+
+**Optional monitoring result:** the separately executed monitoring job completed successfully. Its latest simulated week, 2026-08-10, passed with purity 0.854, ARI 0.761, and retrieval 0.993. This remains operational guidance, not part of the model-selection scorecard or a customer production claim.
 
 ## License
 
