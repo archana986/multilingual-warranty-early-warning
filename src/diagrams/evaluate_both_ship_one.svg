@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1B3139"/>
+    </marker>
+    <marker id="arrowGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8B97A5"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1B3139" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="1920" height="10" fill="#FF3621"/>
+
+  <text x="80" y="92" font-size="44" font-weight="700" fill="#1B3139">Service &amp; Warranty: evaluate both, ship one</text>
+  <text x="80" y="140" font-size="24" fill="#5A6F77">A synthetic, side-by-side evaluation answered one question: is the Databricks hosted model accurate enough to replace a self-hosted one?</text>
+
+  <!-- Column 1: Evaluate -->
+  <rect x="60" y="190" width="1000" height="780" rx="18" fill="#F9F7F4" stroke="#E4E1DA" stroke-width="2"/>
+  <circle cx="110" cy="240" r="24" fill="#1B3139"/>
+  <text x="110" y="249" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+  <text x="148" y="250" font-size="28" font-weight="700" fill="#1B3139" letter-spacing="1">EVALUATE ON DATABRICKS</text>
+
+  <g filter="url(#shadow)">
+    <rect x="310" y="290" width="500" height="110" rx="12" fill="#FFFFFF" stroke="#8B97A5" stroke-width="2"/>
+  </g>
+  <text x="560" y="333" font-size="26" font-weight="700" fill="#1B3139" text-anchor="middle">Multilingual warranty claims</text>
+  <text x="560" y="372" font-size="21" fill="#5A6F77" text-anchor="middle">EN · KO · ES · DE, same claims, same defect labels</text>
+
+  <line x1="560" y1="400" x2="560" y2="446" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="310" y="450" width="500" height="100" rx="12" fill="#EEEDE9" stroke="#1B3139" stroke-width="2"/>
+  </g>
+  <text x="560" y="492" font-size="26" font-weight="700" fill="#1B3139" text-anchor="middle">Unity Catalog</text>
+  <text x="560" y="528" font-size="21" fill="#5A6F77" text-anchor="middle">governed Delta tables, one input for both models</text>
+
+  <path d="M480,550 C480,580 330,580 330,606" fill="none" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M640,550 C640,580 790,580 790,606" fill="none" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="110" y="610" width="440" height="140" rx="12" fill="#FF3621"/>
+  </g>
+  <text x="330" y="652" font-size="17" font-weight="700" fill="#FFE3DF" text-anchor="middle" letter-spacing="2">MANAGED</text>
+  <text x="330" y="688" font-size="27" font-weight="700" fill="#FFFFFF" text-anchor="middle">Databricks hosted Qwen3</text>
+  <text x="330" y="726" font-size="21" fill="#FFFFFF" text-anchor="middle">SQL ai_query, nothing to operate</text>
+
+  <rect x="570" y="610" width="440" height="140" rx="12" fill="#FFFFFF" stroke="#5A6F77" stroke-width="2.5" stroke-dasharray="9 6"/>
+  <text x="790" y="652" font-size="17" font-weight="700" fill="#5A6F77" text-anchor="middle" letter-spacing="2">SELF-HOSTED</text>
+  <text x="790" y="688" font-size="27" font-weight="700" fill="#1B3139" text-anchor="middle">Open-source LaBSE</text>
+  <text x="790" y="726" font-size="21" fill="#5A6F77" text-anchor="middle">team packages, pins and operates it</text>
+
+  <path d="M330,750 C330,785 480,785 480,816" fill="none" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M790,750 C790,785 640,785 640,816" fill="none" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="260" y="820" width="600" height="120" rx="12" fill="#1B3139"/>
+  </g>
+  <text x="560" y="864" font-size="27" font-weight="700" fill="#FFFFFF" text-anchor="middle">One scorecard, same rules for both</text>
+  <text x="560" y="904" font-size="21" fill="#C9D3D8" text-anchor="middle">defect grouping · cross-language retrieval · operational effort</text>
+
+  <!-- Arrow to decision -->
+  <path d="M860,880 L1010,880 C1060,880 1060,580 1110,580 L1128,580" fill="none" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <!-- Column 2: Decide -->
+  <circle cx="1255" cy="240" r="24" fill="#1B3139"/>
+  <text x="1255" y="249" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+  <text x="1255" y="310" font-size="28" font-weight="700" fill="#1B3139" text-anchor="middle" letter-spacing="1">DECIDE</text>
+
+  <g filter="url(#shadow)">
+    <polygon points="1255,440 1385,580 1255,720 1125,580" fill="#FFAB00" stroke="#B37700" stroke-width="2.5"/>
+  </g>
+  <text x="1255" y="570" font-size="25" font-weight="700" fill="#1B3139" text-anchor="middle">Meets the</text>
+  <text x="1255" y="604" font-size="25" font-weight="700" fill="#1B3139" text-anchor="middle">accuracy bar?</text>
+
+  <line x1="1385" y1="580" x2="1456" y2="580" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+  <rect x="1393" y="540" width="56" height="30" rx="15" fill="#00A972"/>
+  <text x="1421" y="562" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">yes</text>
+
+  <text x="1255" y="790" font-size="20" fill="#5A6F77" text-anchor="middle">Customer reviewed the results.</text>
+  <text x="1255" y="818" font-size="20" fill="#5A6F77" text-anchor="middle">Accuracy was no longer the blocker.</text>
+
+  <!-- Column 3: Customer implements -->
+  <rect x="1460" y="190" width="400" height="780" rx="18" fill="#F1FAF6" stroke="#BFE6D6" stroke-width="2"/>
+  <circle cx="1510" cy="240" r="24" fill="#00A972"/>
+  <text x="1510" y="249" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+  <text x="1548" y="250" font-size="26" font-weight="700" fill="#1B3139" letter-spacing="0.5">IMPLEMENTS</text>
+
+  <g filter="url(#shadow)">
+    <rect x="1490" y="470" width="340" height="220" rx="12" fill="#00A972"/>
+  </g>
+  <text x="1660" y="518" font-size="27" font-weight="700" fill="#FFFFFF" text-anchor="middle">Databricks hosted</text>
+  <text x="1660" y="552" font-size="27" font-weight="700" fill="#FFFFFF" text-anchor="middle">model selected</text>
+  <text x="1660" y="600" font-size="21" fill="#FFFFFF" text-anchor="middle">one model selected</text>
+  <text x="1660" y="632" font-size="21" fill="#FFFFFF" text-anchor="middle">batch-first, governed in</text>
+  <text x="1660" y="662" font-size="21" fill="#FFFFFF" text-anchor="middle">Unity Catalog</text>
+
+  <line x1="1660" y1="690" x2="1660" y2="736" stroke="#1B3139" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1490" y="740" width="340" height="120" rx="12" fill="#1B3139" stroke="#00A972" stroke-width="3"/>
+  </g>
+  <text x="1660" y="786" font-size="24" font-weight="700" fill="#FFFFFF" text-anchor="middle">Model met requirements</text>
+  <text x="1660" y="822" font-size="18" fill="#C9D3D8" text-anchor="middle">customer implementation continued</text>
+
+  <line x1="1660" y1="860" x2="1660" y2="886" stroke="#8B97A5" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arrowGrey)"/>
+  <rect x="1490" y="890" width="340" height="62" rx="10" fill="#FFFFFF" stroke="#8B97A5" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="1660" y="918" font-size="18" font-style="italic" fill="#5A6F77" text-anchor="middle">Optional Day-2: score new batches</text>
+  <text x="1660" y="941" font-size="18" font-style="italic" fill="#5A6F77" text-anchor="middle">before any model change</text>
+
+  <!-- Footer -->
+  <text x="80" y="1030" font-size="20" fill="#5A6F77"><tspan font-weight="700" fill="#FF3621">Production rule:</tspan> one embedding model per index. The two-model run is an evaluation step, not the steady-state pipeline. Accelerator uses synthetic data.</text>
+</svg>

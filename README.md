@@ -1,27 +1,27 @@
 # Multilingual Embedding Model Evaluation Accelerator
 
-Use this repository to make an evidence-based choice between a Databricks-managed embedding model and a self-hosted open-source model. It runs both candidates on the same labeled multilingual claims and writes a queryable comparison scorecard to Unity Catalog.
+Evaluate both, ship one. Use this repository to compare a Databricks-managed embedding model with a self-hosted open-source model on the same labeled multilingual claims, then choose **one** model from a queryable Unity Catalog scorecard.
 
-The included corpus is synthetic. It demonstrates the evaluation method without customer data and does not reproduce a live customer system. A separate optional job demonstrates Day-2 monitoring after a model has been selected.
+The corpus is synthetic. It shows the evaluation method. It is not a live customer system. A separate optional job shows Day-2 monitoring after a model has been selected.
 
 ## What this proves
 
-The engineering question is not whether two models can run together in production. It is whether a managed model meets the adopter's accuracy requirements well enough to replace a model they must host and operate.
+The question is not whether two models should run together in production. It is whether a managed model meets the accuracy bar well enough that you no longer have to host and operate one.
 
 The evaluation generates 144 synthetic warranty-style claims in English, Korean, Spanish, and German. Both candidates receive the same text and labels:
 
 - **Qwen3** (`databricks-qwen3-embedding-0-6b`): Databricks-managed, 1024-dim, Public Preview, called with `ai_query`.
 - **LaBSE** (`sentence-transformers/LaBSE`, pinned revision): open-source, 768-dim, Apache-2.0, loaded in the notebook.
 
-The scorecard compares semantic separation, cluster purity, Adjusted Rand Index, and top-1 cross-lingual retrieval. If both candidates meet the required quality bar, the remaining choice is operational: use the managed model to avoid hosting infrastructure, or retain the self-hosted model when direct control of an open model is required.
+The scorecard compares semantic separation, cluster purity, Adjusted Rand Index, and top-1 cross-lingual retrieval. Meeting the bar does not require winning every metric. If both candidates are good enough, the remaining choice is operational: use the managed model to avoid hosting infrastructure, or keep the self-hosted model when you need direct control of an open model.
 
 Production uses one selected model. **Do not mix the two vector spaces in one index.**
 
 ## Architecture
 
-![Evaluation accelerator: the same labeled multilingual claims go through a Databricks-managed model and a self-hosted model, then one scorecard supports the model decision](src/diagrams/warranty_qwen3_vs_labse_demo.png)
+![Evaluate both, ship one: same multilingual claims through Unity Catalog to Databricks-hosted Qwen3 and self-hosted LaBSE, one scorecard, then a decision on the accuracy bar](src/diagrams/evaluate_both_ship_one.png)
 
-Editable source: [`src/diagrams/warranty_qwen3_vs_labse_demo.mmd`](src/diagrams/warranty_qwen3_vs_labse_demo.mmd).
+Slide source: [`src/diagrams/evaluate_both_ship_one.svg`](src/diagrams/evaluate_both_ship_one.svg).
 
 | Stage | What it is | What it does |
 |---|---|---|
@@ -122,7 +122,7 @@ The synthetic generator is only for the out-of-the-box demo. To use your own dat
 | `src/notebooks/multilingual_warranty_qwen3_vs_labse.ipynb` | Generates identical labeled inputs, evaluates Qwen3 and LaBSE, and writes `comparison_metrics`. |
 | `src/notebooks/05_monitoring_and_aiops.ipynb` | Optional extension: synthetic batches, latency, prior-batch drift, quality gate, cost, MLflow, dashboard tables. |
 | `src/dashboards/warranty_monitoring.lvdash.json` | Dashboard datasets (unqualified table names; catalog/schema applied at deploy). |
-| `src/diagrams/` | Architecture PNG (this README) and Mermaid source. |
+| `src/diagrams/` | Architecture slide PNG and SVG used in this README. |
 | `tests/test_portability.py` | Static fork-and-run contract checks. |
 | `SETUP.md` | Prerequisites, interactive steps, air-gap, cleanup, known limits. |
 
@@ -133,7 +133,7 @@ Release validation ran on 2026-10-13 on Azure Databricks serverless. The `compar
 - **Databricks-managed Qwen3:** cluster purity 0.875, ARI 0.779, top-1 cross-lingual retrieval 0.993, semantic separation margin 0.215.
 - **Self-hosted LaBSE:** cluster purity 0.778, ARI 0.674, top-1 cross-lingual retrieval 1.000, semantic separation margin 0.297.
 
-Qwen3 led the clustering measures. LaBSE led semantic separation and was slightly higher on retrieval. Both recovered useful cross-lingual defect structure on this small synthetic corpus. These numbers demonstrate the decision method; they are not customer acceptance results. Managed endpoint behavior can change, so adopters should rerun the evaluation and define thresholds for their own labeled data.
+On this corpus, Qwen3 led clustering (purity and ARI). LaBSE led semantic separation and was slightly higher on top-1 retrieval. The hosted model met the accuracy bar. It did not beat LaBSE on every measure. These numbers demonstrate the decision method. They are not customer acceptance results. Managed endpoint behavior can change, so rerun the evaluation and set thresholds on your own labeled data.
 
 **Optional monitoring result:** the separately executed monitoring job completed successfully. Its latest simulated week, 2026-08-10, passed with purity 0.854, ARI 0.761, and retrieval 0.993. This remains operational guidance, not part of the model-selection scorecard or a customer production claim.
 
